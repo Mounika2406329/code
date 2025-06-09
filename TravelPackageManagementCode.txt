@@ -1,0 +1,714 @@
+TRAVEL PACKAGE MANAGEMENT APPLICATION:
+
+package com.example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class TravelPackageManagementApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(TravelPackageManagementApplication.class, args);
+	}
+
+}
+
+
+
+TRAVEL PACKAGE CONTROLLER:
+
+package com.example.controller;
+
+import com.example.service.TravelPackageService;
+import com.example.model.TravelPackage;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+/**
+ * REST Controller for managing travel packages.
+ */
+
+@RestController
+@RequestMapping("/packages")
+public class TravelPackageController {
+
+    private final TravelPackageService service;
+
+    public TravelPackageController(TravelPackageService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public List<TravelPackage> getAllPackages() {
+        return service.getAllPackages();
+    }
+ 
+    
+    @GetMapping("/{id}")
+    public TravelPackage getPackageById(@PathVariable Long id) {
+        return service.getPackageById(id);
+    }
+
+    
+
+    @PostMapping
+    public TravelPackage createPackage(@RequestBody TravelPackage travelPackage) {
+        return service.createPackage(travelPackage);
+    }
+
+    @PutMapping("/{id}")
+    public TravelPackage updatePackage(@PathVariable Long id, @RequestBody TravelPackage travelPackage) {
+        return service.updatePackage(id, travelPackage);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletePackage(@PathVariable Long id) {
+        service.deletePackage(id);
+    }
+}
+
+
+TRAVEL PACKAGE REPOSITORY:
+
+
+package com.example.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.model.TravelPackage;
+
+/**
+ * Repository for TravelPackage entity.
+ */
+public interface TravelPackageRepository extends JpaRepository<TravelPackage, Long> {
+	
+}
+
+
+
+TRAVEL PACKAGE SERVICE:
+
+package com.example.service;
+
+import com.example.repository.TravelPackageRepository;
+import com.example.model.TravelPackage;
+import com.example.exception.ResourceNotFoundException;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+/**
+ * Service for managing travel packages.
+ */
+@Service
+public class TravelPackageService {
+
+    private final TravelPackageRepository repository;
+
+    public TravelPackageService(TravelPackageRepository repository) {
+        this.repository = repository;
+    }
+
+    public List<TravelPackage> getAllPackages() {
+        return repository.findAll();
+    }
+
+    
+    public TravelPackage getPackageById(Long id) {
+        return repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Package not found with ID: " + id));
+    }
+
+    
+    
+    
+    
+    
+    public TravelPackage createPackage(TravelPackage travelPackage) {
+        return repository.save(travelPackage);
+    }
+
+    public TravelPackage updatePackage(Long id, TravelPackage updatedPackage) {
+        return repository.findById(id)
+            .map(existingPackage -> {
+                existingPackage.setTitle(updatedPackage.getTitle());
+                existingPackage.setDescription(updatedPackage.getDescription());
+                existingPackage.setDuration(updatedPackage.getDuration());
+                existingPackage.setPrice(updatedPackage.getPrice());
+                existingPackage.setHighlights(updatedPackage.getHighlights());
+                existingPackage.setFlights(updatedPackage.getFlights());
+                existingPackage.setHotels(updatedPackage.getHotels());
+                existingPackage.setSightseeing(updatedPackage.getSightseeing());
+                existingPackage.setItinerary(updatedPackage.getItinerary());
+                existingPackage.setOffer(updatedPackage.getOffer());
+                return repository.save(existingPackage);
+            })
+            .orElseThrow(() -> new ResourceNotFoundException("Package not found with ID: " + id));
+    }
+
+    public void deletePackage(Long id) {
+        repository.deleteById(id);
+    }
+}
+
+
+TRAVEL PACKAGE MODEL:
+
+travel package entity:
+
+package com.example.model;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+/**
+ * Represents a travel package in the system.
+ */
+@Entity
+public class TravelPackage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long packageId;
+    private String title;
+    private String description;
+    private int duration;
+    private double price;
+
+    @ElementCollection
+    private List<String> highlights;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Flight> flights;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Hotel> hotels;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Sightseeing> sightseeing;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Itinerary> itinerary;
+
+    @Embedded
+    private Offer offer;
+
+	public Long getPackageId() {
+		return packageId;
+	}
+
+	public void setPackageId(Long packageId) {
+		this.packageId = packageId;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public int getDuration() {
+		return duration;
+	}
+
+	public void setDuration(int duration) {
+		this.duration = duration;
+	}
+
+	public double getPrice() {
+		return price;
+	}
+
+	public void setPrice(double price) {
+		this.price = price;
+	}
+
+	public List<String> getHighlights() {
+		return highlights;
+	}
+
+	public void setHighlights(List<String> highlights) {
+		this.highlights = highlights;
+	}
+
+	public List<Flight> getFlights() {
+		return flights;
+	}
+
+	public void setFlights(List<Flight> flights) {
+		this.flights = flights;
+	}
+
+	public List<Hotel> getHotels() {
+		return hotels;
+	}
+
+	public void setHotels(List<Hotel> hotels) {
+		this.hotels = hotels;
+	}
+
+	public List<Sightseeing> getSightseeing() {
+		return sightseeing;
+	}
+
+	public void setSightseeing(List<Sightseeing> sightseeing) {
+		this.sightseeing = sightseeing;
+	}
+
+	public List<Itinerary> getItinerary() {
+		return itinerary;
+	}
+
+	public void setItinerary(List<Itinerary> itinerary) {
+		this.itinerary = itinerary;
+	}
+
+	public Offer getOffer() {
+		return offer;
+	}
+
+	public void setOffer(Offer offer) {
+		this.offer = offer;
+	}
+
+    
+}
+
+
+flight entity:
+
+package com.example.model;
+
+import jakarta.persistence.*;
+
+/**
+ * Represents flight details for a travel package.
+ */
+@Entity
+public class Flight {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String airline;
+    private String fromCity;
+    private String toCity;
+    private String departureTime;
+    private String arrivalTime;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getAirline() {
+        return airline;
+    }
+
+    public void setAirline(String airline) {
+        this.airline = airline;
+    }
+
+    public String getFromCity() {
+        return fromCity;
+    }
+
+    public void setFromCity(String fromCity) {
+        this.fromCity = fromCity;
+    }
+
+    public String getToCity() {
+        return toCity;
+    }
+
+    public void setToCity(String toCity) {
+        this.toCity = toCity;
+    }
+
+    public String getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(String departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public String getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(String arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
+}
+
+
+hotel entity:
+
+package com.example.model;
+
+import jakarta.persistence.*;
+
+/**
+ * Represents hotel details for a travel package.
+ */
+@Entity
+public class Hotel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String city;
+    private double rating;
+    private int nights;
+    private double costPerNight;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public int getNights() {
+        return nights;
+    }
+
+    public void setNights(int nights) {
+        this.nights = nights;
+    }
+
+    public double getCostPerNight() {
+        return costPerNight;
+    }
+
+    public void setCostPerNight(double costPerNight) {
+        this.costPerNight = costPerNight;
+    }
+}
+
+
+itinerary entity:
+
+package com.example.model;
+
+import jakarta.persistence.*;
+
+/**
+ * Represents itinerary details for a travel package.
+ */
+@Entity
+public class Itinerary {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private int dayNumber;
+    private String activityTitle;
+    private String activityDescription;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public int getDayNumber() {
+        return dayNumber;
+    }
+
+    public void setDayNumber(int dayNumber) {
+        this.dayNumber = dayNumber;
+    }
+
+    public String getActivityTitle() {
+        return activityTitle;
+    }
+
+    public void setActivityTitle(String activityTitle) {
+        this.activityTitle = activityTitle;
+    }
+
+    public String getActivityDescription() {
+        return activityDescription;
+    }
+
+    public void setActivityDescription(String activityDescription) {
+        this.activityDescription = activityDescription;
+    }
+}
+
+
+Offer class:
+
+package com.example.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+
+/**
+ * Represents offer details for a travel package.
+ */
+@Embeddable
+public class Offer {
+
+    private String couponCode;
+
+    @Column(name = "offer_description") // Avoids conflict with TravelPackage.description
+    private String description;
+
+    private int discountPercentage;
+    private boolean active;
+
+    // Getters and Setters
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getDiscountPercentage() {
+        return discountPercentage;
+    }
+
+    public void setDiscountPercentage(int discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+}
+
+
+sightseeing entity:
+
+package com.example.model;
+
+import jakarta.persistence.*;
+
+/**
+ * Represents sightseeing details in a travel package.
+ */
+@Entity
+public class Sightseeing {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String location;
+
+    @Column(name = "sightseeing_description") // Avoids conflict with TravelPackage
+    private String description;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+}
+
+
+APPLICATION PROPERTIES:
+
+spring.application.name=travel-package-management
+
+# Database Configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/travel_Package_db
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Hibernate Configuration
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Server Configuration
+server.port=8081
+
+# Logging Configuration
+logging.level.org.springframework=INFO
+logging.level.com.example.travel=DEBUG
+
+
+pom.xml:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.6</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>travel-package-management</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>travel-package-management</name>
+	<description>Demo project for Spring Boot</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>17</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.9</version> <!-- or the latest version -->
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.9</version> <!-- or the latest version -->
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
